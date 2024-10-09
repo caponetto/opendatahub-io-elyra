@@ -1,0 +1,38 @@
+name: Update Version through Pull Request
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New version'
+        required: true
+      target_branch:
+        description: 'Target branch for the pull request'
+        required: true
+
+env:
+  NODE_VERSION: 20.11.0
+
+jobs:
+  update_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Update version to ${{ github.event.inputs.version }}
+        run: |
+          ./.github/workflows/update_version.sh ${{ github.event.inputs.version }}
+
+      - name: Create a pull request
+        uses: peter-evans/create-pull-request@5e914681df9dc83aa4e4905692ca88beb2f9e91f # v7.0.5
+        with:
+          base: ${{ github.event.inputs.target_branch }}
+          title: 'Update version to ${{ github.event.inputs.version }}'
+          body: ':robot: This is an automated Pull Request created by `/.github/workflows/update-version-through-pr.yml` to update the project version to ${{ github.event.inputs.version }}.'
