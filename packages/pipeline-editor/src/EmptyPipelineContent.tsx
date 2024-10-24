@@ -39,7 +39,8 @@ export const EmptyGenericPipeline: React.FC<IEmptyGenericPipelineProps> = ({
         height="120px"
       />
       <h3 className={HEADER_CLASS}>
-        Start your new pipeline by dragging files from the file browser pane
+        TEST CHANGE - Start your new pipeline by dragging files from the file
+        browser pane
       </h3>
       <br />
       <br />
@@ -80,8 +81,8 @@ export const EmptyPlatformSpecificPipeline: React.FC<
         height="120px"
       />
       <h3 className={HEADER_CLASS}>
-        Start your new pipeline by dragging files from the file browser pane or
-        add custom components by clicking the{' '}
+        TEST CHANGE - Start your new pipeline by dragging files from the file
+        browser pane or add custom components by clicking the{' '}
         <button className={BUTTON_CLASS} onClick={onOpenCatalog}>
           <componentCatalogIcon.react
             className={ICON_CLASS}
