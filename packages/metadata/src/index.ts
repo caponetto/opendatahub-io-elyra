@@ -55,7 +55,7 @@ const commandIDs = {
  */
 const extension: JupyterFrontEndPlugin<void> = {
   id: METADATA_WIDGET_ID,
-  autoStart: true,
+  autoStart: 'defer',
   requires: [
     ICommandPalette,
     IEditorServices,

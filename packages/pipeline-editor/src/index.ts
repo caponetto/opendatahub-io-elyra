@@ -107,7 +107,7 @@ export const getEmptyPipelineJson = (runtime_type: string | undefined) => {
  */
 const extension: JupyterFrontEndPlugin<void> = {
   id: PIPELINE,
-  autoStart: true,
+  autoStart: 'defer',
   requires: [
     ICommandPalette,
     ILauncher,

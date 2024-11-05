@@ -91,7 +91,7 @@ const defaultConfig: IMyCodeEditorConfig = {
  */
 const extension: JupyterFrontEndPlugin<void> = {
   id: PYTHON_EDITOR_NAMESPACE,
-  autoStart: true,
+  autoStart: 'defer',
   requires: [
     IEditorServices,
     IEditorTracker,

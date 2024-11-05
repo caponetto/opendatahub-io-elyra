@@ -32,7 +32,7 @@ import { Widget } from '@lumino/widgets';
  */
 const scriptEditorDebuggerExtension: JupyterFrontEndPlugin<void> = {
   id: 'elyra-script-debugger',
-  autoStart: true,
+  autoStart: 'defer',
   requires: [IDebugger, IEditorTracker],
   optional: [ILabShell],
   activate: (

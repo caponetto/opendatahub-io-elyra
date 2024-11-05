@@ -49,7 +49,7 @@ const commandIDs = {
  */
 export const code_snippet_extension: JupyterFrontEndPlugin<void> = {
   id: CODE_SNIPPET_EXTENSION_ID,
-  autoStart: true,
+  autoStart: 'defer',
   requires: [ICommandPalette, ILayoutRestorer, IEditorServices],
   activate: (
     app: JupyterFrontEnd,

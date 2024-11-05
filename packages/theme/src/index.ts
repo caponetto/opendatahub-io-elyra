@@ -52,7 +52,7 @@ export interface IProps {
  */
 const extension: JupyterFrontEndPlugin<ILauncher> = {
   id: ELYRA_THEME_NAMESPACE,
-  autoStart: true,
+  autoStart: 'defer',
   requires: [ITranslator, ILabShell, IMainMenu],
   optional: [ICommandPalette],
   provides: ILauncher,
