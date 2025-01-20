@@ -49,6 +49,8 @@ enable_pipeline_info = os.getenv("ELYRA_ENABLE_PIPELINE_INFO", "true").lower() =
 pipeline_name = None  # global used in formatted logging
 operation_name = None  # global used in formatted logging
 
+run_id = os.getenv("ELYRA_RUN_NAME")
+
 
 class FileOpBase(ABC):
     """Abstract base class for file-based operations"""
@@ -308,7 +310,7 @@ class FileOpBase(ABC):
         if not object_to_upload:
             object_to_upload = file_to_upload
 
-        object_to_upload = self.get_object_storage_filename(object_to_upload)
+        object_to_upload = self.get_object_storage_filename(os.path.join(run_id, object_to_upload))
         t0 = time.time()
         self.cos_client.fput_object(bucket_name=self.cos_bucket, object_name=object_to_upload, file_path=file_to_upload)
         duration = time.time() - t0
