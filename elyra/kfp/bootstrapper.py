@@ -294,7 +294,7 @@ class FileOpBase(ABC):
 
         :param file_to_get: filename
         """
-
+        
         object_to_get = self.get_object_storage_filename(file_to_get)
         t0 = time.time()
         self.cos_client.fget_object(bucket_name=self.cos_bucket, object_name=object_to_get, file_path=file_to_get)
@@ -303,10 +303,11 @@ class FileOpBase(ABC):
             f"downloaded {file_to_get} from bucket: {self.cos_bucket}, object: {object_to_get}", duration
         )
 
-    def put_file_to_object_storage(self, file_to_upload: str, object_name: Optional[str] = None) -> None:
+    def put_file_to_object_storage(self, file_to_upload: str, object_name: Optional[str] = None, type: Optional[str] = None) -> None:
         """Utility function to put files into an object storage
 
         :param file_to_upload: filename
+        :param type: type of file (ELYRA-outputs or code-outputs)
         :param object_name: remote filename (used to rename)
         """
 
@@ -315,7 +316,7 @@ class FileOpBase(ABC):
             object_to_upload = file_to_upload
 
         run_id = os.getenv("ELYRA_RUN_NAME")
-        if self.append_run_id and run_id:
+        if self.append_run_id and run_id and not type:
             object_to_upload = os.path.join(run_id, object_to_upload)
 
         object_to_upload = self.get_object_storage_filename(object_to_upload)
@@ -342,7 +343,7 @@ class FileOpBase(ABC):
                 for file in os.listdir(matched_file):
                     self.process_output_file(os.path.join(matched_file, file))
             else:
-                self.put_file_to_object_storage(matched_file)
+                self.put_file_to_object_storage(matched_file, type="code-outputs")
 
     def convert_param_str_to_dict(self, pipeline_parameters: Optional[str] = None) -> Dict[str, Any]:
         """Convert INOUT-separated string of pipeline parameters into a dictionary."""
