@@ -90,9 +90,9 @@ def generated_pipeline(
 {%  if workflow_task.task_modifiers.set_run_name %}
     {{ task_name }}.set_env_variable(name="ELYRA_RUN_NAME", value="{{ workflow_task.task_modifiers.set_run_name }}")
 {%  endif %}
-{%  if workflow_task.task_modifiers.disable_node_caching %}
-    {{ task_name }}.execution_options.caching_strategy.max_cache_staleness = "P0D"
-{%  endif %}
+{% if workflow_task.task_modifiers.disable_node_caching %}
+    {{ task_name }}.set_caching_options(enable_caching={{ workflow_task.task_modifiers.disable_node_caching == false }})
+{% endif %}
 {%  if workflow_task.task_modifiers.pod_labels %}
 {%    for pod_label_key, pod_label_value in workflow_task.task_modifiers.pod_labels.items() %}
     add_pod_label({{ task_name }}, "{{ pod_label_key }}", "{{ pod_label_value }}")

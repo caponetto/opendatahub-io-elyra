@@ -46,6 +46,7 @@ F = TypeVar("F", bound="FileOpBase")
 
 logger = logging.getLogger("elyra")
 enable_pipeline_info = os.getenv("ELYRA_ENABLE_PIPELINE_INFO", "true").lower() == "true"
+run_id = os.getenv("ELYRA_RUN_NAME")
 # not only log File Operations output of NotebookFileOp, RFileOp, PythonFileOp to stdout so it appears
 # in runtime / container logs and also Airflow and KFP GUI logs, but also put output to S3 storage
 enable_generic_node_script_output_to_s3 = (
@@ -129,7 +130,7 @@ class FileOpBase(ABC):
         t0 = time.time()
         archive_file = self.input_params.get("cos-dependencies-archive")
 
-        self.get_file_from_object_storage(archive_file)
+        self.get_file_from_object_storage(archive_file, is_dependency=True)
 
         inputs = self.input_params.get("inputs")
         if inputs:
@@ -289,13 +290,18 @@ class FileOpBase(ABC):
         """
         return os.path.join(self.input_params.get("cos-directory", ""), filename)
 
-    def get_file_from_object_storage(self, file_to_get: str) -> None:
+    def get_file_from_object_storage(self, file_to_get: str, is_dependency: bool = False) -> None:
         """Utility function to get files from an object storage
 
         :param file_to_get: filename
+        :param is_dependency: flag to indicate if the file is a dependency
         """
 
-        object_to_get = self.get_object_storage_filename(file_to_get)
+        object_to_get = file_to_get
+        if self.append_run_id and run_id and not is_dependency:
+            object_to_get = os.path.join(run_id, file_to_get)
+        object_to_get = self.get_object_storage_filename(object_to_get)
+
         t0 = time.time()
         self.cos_client.fget_object(bucket_name=self.cos_bucket, object_name=object_to_get, file_path=file_to_get)
         duration = time.time() - t0
@@ -314,7 +320,6 @@ class FileOpBase(ABC):
         if not object_to_upload:
             object_to_upload = file_to_upload
 
-        run_id = os.getenv("ELYRA_RUN_NAME")
         if self.append_run_id and run_id:
             object_to_upload = os.path.join(run_id, object_to_upload)
 
