@@ -158,6 +158,49 @@ class FileOpBase(ABC):
         duration = time.time() - t0
         OpUtil.log_operation_info("outputs processed", duration)
 
+    def register_artifacts_in_mlmd(self) -> None:
+        try:
+            from ml_metadata.metadata_store import metadata_store
+            from ml_metadata.proto import metadata_store_pb2, metadata_pb2
+
+            outputs = self.input_params.get("outputs")
+            if not outputs:
+                return
+
+            # Connect to MLMD using default KFP service name
+            config = metadata_store_pb2.MetadataStoreClientConfig()
+            config.host = os.getenv("METADATA_GRPC_SERVICE_HOST", "metadata-grpc-service")
+            config.port = int(os.getenv("METADATA_GRPC_SERVICE_PORT", "8080"))
+            store = metadata_store.MetadataStore(config)
+
+            output_list = outputs.split(INOUT_SEPARATOR)
+            for file in output_list:
+                file = file.strip()
+                artifact_name = Path(file).stem
+                uri = f"s3://{self.cos_bucket}/{self.get_object_storage_filename(file)}"
+
+                # Create or lookup the artifact type
+                type_request = metadata_pb2.ArtifactType(
+                    name="system.Model",  # Change to "system.Dataset" or custom as needed
+                    properties={"name": metadata_pb2.STRING},
+                )
+                try:
+                    artifact_type_id = store.put_artifact_type(type_request, can_add_fields=True).id
+                except Exception as e:
+                    logger.warning(f"Could not create artifact type: {e}")
+                    continue
+
+                # Register the artifact
+                artifact = metadata_pb2.Artifact()
+                artifact.uri = uri
+                artifact.type_id = artifact_type_id
+                artifact.properties["name"].string_value = artifact_name
+                store.put_artifacts([artifact])
+                logger.info(f"[elyra-mlmd] Registered artifact in MLMD: {artifact_name} → {uri}")
+
+        except Exception as e:
+            logger.warning(f"[elyra-mlmd] Failed to register artifacts in MLMD: {e}")
+
     def process_metrics_and_metadata(self) -> None:
         """Process metrics and metadata
 
@@ -267,6 +310,15 @@ class FileOpBase(ABC):
                 "type": "markdown",
             }
         )
+
+        outputs = self.input_params.get("outputs")
+        if outputs:
+            output_list = outputs.split(INOUT_SEPARATOR)
+            for file in output_list:
+                file = file.strip()
+                s3_uri = f"s3://{self.cos_bucket}/{self.get_object_storage_filename(file)}"
+                OpUtil.log_operation_info(f"+++Adding {file} to KFP UI metadata with S3 URI: {s3_uri}")
+                metadata["outputs"].append({"type": "artifact", "storage": "gcs", "source": s3_uri})
 
         # print the content of the augmented metadata file
         logger.debug(f"Output UI metadata: {json.dumps(metadata)}")
@@ -779,6 +831,8 @@ def main():
     file_op.process_dependencies()
 
     file_op.execute()
+
+    file_op.register_artifacts_in_mlmd()
 
     # Process notebook | script metrics and KFP UI metadata
     file_op.process_metrics_and_metadata()
