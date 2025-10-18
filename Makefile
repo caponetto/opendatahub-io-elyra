@@ -210,8 +210,22 @@ elyra-image-env: ## Creates a conda env consisting of the dependencies used in i
 test-dependencies:
 	@$(PYTHON_PIP) install -q -r test_requirements.txt
 
-pytest:
-	$(PYTHON) -m pytest -v --durations=0 --durations-min=60 elyra --cov --cov-report=xml
+copy-tests-to-package: ## Copy test files to installed package
+	@$(PYTHON) -c "import site, shutil, pathlib; \
+	src = pathlib.Path('elyra/tests'); \
+	dst = pathlib.Path(site.getsitepackages()[0]) / 'elyra' / 'tests'; \
+	shutil.copytree(src, dst, dirs_exist_ok=True)"
+
+clean-tests-from-package: ## Remove test files from installed package
+	@$(PYTHON) -c "import site, shutil, pathlib; \
+	dst = pathlib.Path(site.getsitepackages()[0]) / 'elyra' / 'tests'; \
+	shutil.rmtree(dst, ignore_errors=True)"
+
+pytest: copy-tests-to-package
+	@$(PYTHON) -m pytest -v --durations=0 --durations-min=60 elyra --cov --cov-report=xml; \
+	result=$$?; \
+	make clean-tests-from-package; \
+	exit $$result
 
 test-server: test-dependencies pytest # Run python unit tests
 

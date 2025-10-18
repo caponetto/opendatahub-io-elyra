@@ -172,6 +172,9 @@ ignore-vcs = true
 
 [tool.hatch.build.targets.wheel]
 core-metadata-version = "2.3"
+exclude = [
+    "elyra/tests",
+]
 
 # Include data files with dist
 [tool.hatch.build.targets.wheel.shared-data]
